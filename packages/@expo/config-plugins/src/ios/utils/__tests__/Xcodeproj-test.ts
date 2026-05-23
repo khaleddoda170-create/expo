@@ -217,12 +217,16 @@ describe('Xcodeproj pbxproj utilities', () => {
       expect(project.pbxGroupByName('Sources')).toBeDefined();
     });
 
-    it('returns the same group when called twice for the same path', () => {
+    it('does not recreate the group when called twice for the same path', () => {
       ensureGroupRecursively(project, 'HelloWorld/Generated');
-      const first = project.pbxGroupByName('Generated');
+      const beforeUuids = Object.keys(project.hash.project.objects.PBXGroup).filter(
+        (k) => !k.endsWith('_comment')
+      );
       ensureGroupRecursively(project, 'HelloWorld/Generated');
-      const second = project.pbxGroupByName('Generated');
-      expect(first).toBe(second);
+      const afterUuids = Object.keys(project.hash.project.objects.PBXGroup).filter(
+        (k) => !k.endsWith('_comment')
+      );
+      expect(afterUuids).toEqual(beforeUuids);
     });
   });
 
