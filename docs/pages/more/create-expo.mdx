@@ -1,165 +1,519 @@
----
-title: create-expo-app
-maxHeadingDepth: 4
-description: A command-line tool to create a new Expo and React Native project.
----
+```js
+// 🎮 GTA Egypt Ultimate Online Full Prototype
+// 📱 React Native + Online + Offline + Egypt Map
 
-import { Terminal } from '~/ui/components/Snippet';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  ScrollView,
+} from "react-native";
 
-`create-expo-app` is a command-line tool to create and set up a new Expo and React Native project. This tool simplifies the initialization process by providing various templates to get started quickly without the need for manual configuration.
+// 🌍 الدول
+const countries = [
+  { name: "Egypt 🇪🇬", color: "#27ae60", police: 3 },
+  { name: "Italy 🇮🇹", color: "#3498db", police: 2 },
+  { name: "UAE 🇦🇪", color: "#f1c40f", police: 4 },
+  { name: "France 🇫🇷", color: "#8e44ad", police: 2 },
+];
 
-## Create a new project
+// 🏙️ محافظات مصر
+const egyptCities = [
+  "Cairo",
+  "Giza",
+  "Alexandria",
+  "Tanta",
+  "Mansoura",
+  "Luxor",
+  "Aswan",
+  "Sharm El Sheikh",
+  "Hurghada",
+];
 
-To create a new project, run the following command:
+// 🚗 العربيات
+const cars = [
+  { name: "BMW", speed: 10, color: "#3498db" },
+  { name: "Mercedes", speed: 8, color: "#2c3e50" },
+  { name: "Audi", speed: 9, color: "#7f8c8d" },
+  { name: "Ferrari", speed: 15, color: "#e74c3c" },
+  { name: "Lamborghini", speed: 17, color: "#f1c40f" },
+  { name: "Bugatti", speed: 20, color: "#9b59b6" },
+  { name: "Tesla", speed: 13, color: "#ecf0f1" },
+  { name: "Toyota", speed: 7, color: "#95a5a6" },
+  { name: "Lada 2107", speed: 5, color: "#8e6e53" },
+];
 
-<Terminal
-  cmd={{
-    npm: ['$ npx create-expo-app@latest --template default@sdk-56'],
-    yarn: ['$ yarn create expo-app --template default@sdk-56'],
-    pnpm: ['$ pnpm create expo-app --template default@sdk-56'],
-    bun: ['$ bun create expo --template default@sdk-56'],
-  }}
-/>
+// 🏪 المحلات
+const shops = [
+  "🚗 Car Shop",
+  "⛽ Gas Station",
+  "🔧 Garage",
+  "💰 Bank",
+  "☕ Cafe",
+  "🏪 Mall",
+];
 
-> **Note:** During the SDK 56 transition period, `create-expo-app@latest` without the `--template` flag creates an SDK 54 project. If you plan to use Expo Go on a physical device, use an SDK 54 project. Otherwise, use `--template default@sdk-56` to create an SDK 56 project.
+// 👮 أقسام الشرطة
+const policeStations = [
+  "👮 Cairo Police",
+  "👮 Alexandria Police",
+  "👮 Dubai Police",
+  "👮 Rome Police",
+];
 
-Running the above command will prompt you to enter the app name of your project. This app name is also used in the app config's [`name`](/versions/latest/config/app/#name) property.
+// ✈️ المطارات
+const airports = [
+  "✈️ Cairo Airport",
+  "✈️ Dubai Airport",
+  "✈️ Rome Airport",
+  "✈️ Paris Airport",
+];
 
-<Terminal cmd={['What is your app named? my-app']} />
+export default function App() {
+  // 🚗 اللاعب
+  const [player, setPlayer] = useState({
+    x: 150,
+    y: 300,
+  });
 
-## Options
+  // 👮 الشرطة
+  const [police, setPolice] = useState({
+    x: 20,
+    y: 20,
+  });
 
-Uses the following options to customize the command behavior.
+  // 💰 فلوس
+  const [money, setMoney] = useState(0);
 
-### `--yes`
+  // 🚗 العربية الحالية
+  const [carIndex, setCarIndex] = useState(0);
 
-Uses the default options to create a new project.
+  // 🌍 الدولة الحالية
+  const [countryIndex, setCountryIndex] = useState(0);
 
-### `--no-install`
+  // 📍 المحافظة الحالية
+  const [cityIndex, setCityIndex] = useState(0);
 
-Skips installing npm dependencies or CocoaPods.
+  // 🌐 مود اللعب
+  const [mode, setMode] = useState("offline");
 
-### `--no-agents-md`
+  // 🎯 المهمة الحالية
+  const [mission, setMission] = useState(
+    "🚗 اجمع فلوس واهرب من الشرطة"
+  );
 
-Skips generating **AGENTS.md**, **CLAUDE.md**, and **.claude/settings.json**. By default, `create-expo-app` generates these files so AI coding agents (such as Claude Code) have Expo-specific context and the [`expo` skills plugin](https://expo.dev/expo-skills) configured automatically. The generated **AGENTS.md** points to the versioned Expo docs matching your project's SDK version.
+  const car = cars[carIndex];
+  const country = countries[countryIndex];
 
-### `--template`
+  // 🚗 حركة اللاعب
+  const move = (dx, dy) => {
+    setPlayer((p) => ({
+      x: Math.max(0, Math.min(320, p.x + dx * car.speed)),
+      y: Math.max(0, Math.min(620, p.y + dy * car.speed)),
+    }));
+  };
 
-Running `create-expo-app` with a [Node Package Manager](#node-package-managers-support) initializes and sets up a new Expo project using the default template.
+  // 👮 الشرطة الذكية
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPolice((p) => ({
+        x:
+          p.x +
+          (player.x > p.x
+            ? country.police
+            : -country.police),
 
-You can use the `--template` option to select one of the following templates or pass it as an argument to the option. For example, `--template default`.
+        y:
+          p.y +
+          (player.y > p.y
+            ? country.police
+            : -country.police),
+      }));
+    }, 200);
 
-> **info** Looking for more templates? Check out the [`--example`](#--example) option to initialize your project with one of the example apps that demonstrate specific features and integrations.
+    return () => clearInterval(interval);
+  }, [player, country]);
 
-| Template                                                                                              | Description                                                                                                                                                                           |
-| ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`default`](https://github.com/expo/expo/tree/main/templates/expo-template-default)                   | Default template. Designed to build multi-screen apps. Includes recommended tools such as Expo CLI, Expo Router library and TypeScript configuration enabled. Suitable for most apps. |
-| [`blank`](https://github.com/expo/expo/tree/main/templates/expo-template-blank)                       | Installs minimum required npm dependencies without configuring navigation.                                                                                                            |
-| [`blank-typescript`](https://github.com/expo/expo/tree/main/templates/expo-template-blank-typescript) | A Blank template with TypeScript enabled.                                                                                                                                             |
-| [`tabs`](https://github.com/expo/expo/tree/main/templates/expo-template-tabs)                         | Installs and configures file-based routing with Expo Router and TypeScript enabled.                                                                                                   |
-| [`bare-minimum`](https://github.com/expo/expo/tree/main/templates/expo-template-bare-minimum)         | A Blank template with native directories (**android** and **ios**) generated. Runs [`npx expo prebuild`](/workflow/continuous-native-generation) during the setup.                    |
+  // 💀 الإمساك باللاعب
+  useEffect(() => {
+    const dist =
+      Math.abs(player.x - police.x) +
+      Math.abs(player.y - police.y);
 
-### `--example`
+    if (dist < 30) {
+      setMoney(0);
 
-Use this option to initialize a project using an example from [expo/examples](https://github.com/expo/examples).
+      setMission("💀 الشرطة قبضت عليك!");
 
-For example:
-
-- Running `npx create-expo-app --example with-router` sets up a project with the Expo Router library
-- Running `npx create-expo-app --example with-react-navigation` sets up a project similar to the default template, but configured with plain React Navigation library
-
-### `--version`
-
-Prints the version number and exits.
-
-### `--help`
-
-Prints the list of available options and exits.
-
-## Node Package Managers support
-
-Creating a new project with `create-expo-app` also handles setting up additional configuration needed for a specific Node Package Manager.
-
-**If you are migrating from one package manager to another**, you've to manually carry out the additional configuration in your project. **If you are using [EAS](/eas/)**, you also have to configure your project for any additional required steps manually.
-
-All the additional steps for each package manager are listed below.
-
-### npm
-
-#### Local installation
-
-npm is installed as part of Node.js installation. See [Node.js documentation](https://nodejs.org/en/download/package-manager) for installation instructions.
-
-#### EAS installation
-
-Supported by default if the project directory contains **package-lock.json**.
-
-### Yarn 1 (Classic)
-
-#### Local installation
-
-Yarn 1 (Classic) is usually installed as a global dependency of npm. See [Yarn 1 documentation](https://classic.yarnpkg.com/en/docs/getting-started) for installation instructions.
-
-#### EAS installation
-
-Supported by default if the project directory contains **yarn.lock**.
-
-### Yarn 2+ (Modern)
-
-#### Local installation
-
-See [Yarn documentation](https://yarnpkg.com/getting-started/install) for installation instructions.
-
-Yarn 2+ handles package management differently than Yarn 1. One of the core changes in Yarn 2+ is the [Plug'n'Play (PnP)](https://yarnpkg.com/features/pnp) node linking model that does not work with React Native.
-
-By default, a project created with `create-expo-app` and Yarn 2+ uses [`nodeLinker`](https://yarnpkg.com/features/linkers#nodelinker-node-modules) with its value set to `node-modules` to install dependencies.
-
-```yaml .yarnrc.yml
-nodeLinker: node-modules
-```
-
-#### EAS installation
-
-Yarn Modern on EAS requires enabling [Corepack](https://github.com/nodejs/corepack) for the build. Set [`corepack`](/eas/json/#corepack) to `true` in your build profile in **eas.json**:
-
-```json eas.json
-{
-  "build": {
-    "production": {
-      "corepack": true
+      setPolice({
+        x: 20,
+        y: 20,
+      });
     }
-  }
+  }, [player, police]);
+
+  // 💰 جمع الفلوس
+  const collectMoney = () => {
+    setMoney((m) => m + 10);
+
+    if (money > 100) {
+      setMission("🚓 الشرطة زادت المطاردة!");
+    }
+  };
+
+  // ✈️ السفر
+  const travel = (index) => {
+    setCountryIndex(index);
+
+    setMission(
+      `✈️ سافرت إلى ${countries[index].name}`
+    );
+  };
+
+  return (
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: country.color,
+        },
+      ]}
+    >
+      {/* 🎮 العنوان */}
+      <Text style={styles.title}>
+        🔥 GTA Egypt Ultimate
+      </Text>
+
+      {/* 🌐 مود */}
+      <Text style={styles.mode}>
+        🌍 {mode.toUpperCase()}
+      </Text>
+
+      {/* 💰 فلوس */}
+      <Text style={styles.money}>
+        💰 {money}
+      </Text>
+
+      {/* 🎯 المهمة */}
+      <Text style={styles.mission}>
+        {mission}
+      </Text>
+
+      {/* 📍 المحافظة */}
+      <Text style={styles.city}>
+        📍 {egyptCities[cityIndex]}
+      </Text>
+
+      {/* 🚗 اللاعب */}
+      <View
+        style={[
+          styles.player,
+          {
+            left: player.x,
+            top: player.y,
+            backgroundColor: car.color,
+          },
+        ]}
+      />
+
+      {/* 👮 الشرطة */}
+      <View
+        style={[
+          styles.police,
+          {
+            left: police.x,
+            top: police.y,
+          },
+        ]}
+      />
+
+      {/* 💰 فلوس */}
+      <Pressable
+        style={styles.coin}
+        onPress={collectMoney}
+      >
+        <Text style={{ fontSize: 25 }}>
+          💰
+        </Text>
+      </Pressable>
+
+      {/* 🎮 التحكم */}
+      <View style={styles.controls}>
+        <Pressable onPress={() => move(0, -1)}>
+          <Text style={styles.btn}>⬆️</Text>
+        </Pressable>
+
+        <View style={{ flexDirection: "row" }}>
+          <Pressable onPress={() => move(-1, 0)}>
+            <Text style={styles.btn}>⬅️</Text>
+          </Pressable>
+
+          <Pressable onPress={() => move(1, 0)}>
+            <Text style={styles.btn}>➡️</Text>
+          </Pressable>
+        </View>
+
+        <Pressable onPress={() => move(0, 1)}>
+          <Text style={styles.btn}>⬇️</Text>
+        </Pressable>
+      </View>
+
+      {/* 🚗 الجراج */}
+      <ScrollView style={styles.garage}>
+        <Text style={styles.boxTitle}>
+          🚗 Garage
+        </Text>
+
+        {cars.map((c, i) => (
+          <Pressable
+            key={i}
+            onPress={() => setCarIndex(i)}
+          >
+            <Text style={styles.listItem}>
+              {carIndex === i ? "👉 " : ""}
+              {c.name}
+            </Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+
+      {/* 🌍 الدول */}
+      <ScrollView style={styles.travel}>
+        <Text style={styles.boxTitle}>
+          ✈️ Travel
+        </Text>
+
+        {countries.map((c, i) => (
+          <Pressable
+            key={i}
+            onPress={() => travel(i)}
+          >
+            <Text style={styles.listItem}>
+              🌍 {c.name}
+            </Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+
+      {/* 🏪 المحلات */}
+      <ScrollView style={styles.shops}>
+        <Text style={styles.boxTitle}>
+          🏪 Shops
+        </Text>
+
+        {shops.map((s, i) => (
+          <Text
+            key={i}
+            style={styles.listItem}
+          >
+            {s}
+          </Text>
+        ))}
+      </ScrollView>
+
+      {/* 👮 الشرطة */}
+      <ScrollView style={styles.policeBox}>
+        <Text style={styles.boxTitle}>
+          👮 Police
+        </Text>
+
+        {policeStations.map((p, i) => (
+          <Text
+            key={i}
+            style={styles.listItem}
+          >
+            {p}
+          </Text>
+        ))}
+      </ScrollView>
+
+      {/* ✈️ المطارات */}
+      <ScrollView style={styles.airports}>
+        <Text style={styles.boxTitle}>
+          ✈️ Airports
+        </Text>
+
+        {airports.map((a, i) => (
+          <Text
+            key={i}
+            style={styles.listItem}
+          >
+            {a}
+          </Text>
+        ))}
+      </ScrollView>
+
+      {/* 🌐 Online / Offline */}
+      <View style={styles.modeSwitch}>
+        <Pressable
+          onPress={() => setMode("offline")}
+        >
+          <Text style={styles.switchBtn}>
+            📴 Offline
+          </Text>
+        </Pressable>
+
+        <Pressable
+          onPress={() => setMode("online")}
+        >
+          <Text style={styles.switchBtn}>
+            🌍 Online
+          </Text>
+        </Pressable>
+      </View>
+    </View>
+  );
 }
+
+// 🎨 التصميم
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+
+  title: {
+    marginTop: 50,
+    color: "white",
+    fontSize: 22,
+    fontWeight: "bold",
+    marginLeft: 15,
+  },
+
+  mode: {
+    color: "white",
+    marginLeft: 15,
+  },
+
+  money: {
+    color: "yellow",
+    marginLeft: 15,
+    fontSize: 18,
+  },
+
+  mission: {
+    color: "white",
+    marginLeft: 15,
+    marginTop: 5,
+  },
+
+  city: {
+    color: "#00ffcc",
+    marginLeft: 15,
+  },
+
+  player: {
+    position: "absolute",
+    width: 55,
+    height: 30,
+    borderRadius: 8,
+  },
+
+  police: {
+    position: "absolute",
+    width: 30,
+    height: 30,
+    backgroundColor: "red",
+    borderRadius: 50,
+  },
+
+  coin: {
+    position: "absolute",
+    top: 200,
+    left: 250,
+  },
+
+  controls: {
+    position: "absolute",
+    bottom: 40,
+    alignSelf: "center",
+    alignItems: "center",
+  },
+
+  btn: {
+    fontSize: 35,
+    margin: 5,
+  },
+
+  garage: {
+    position: "absolute",
+    top: 120,
+    right: 10,
+    width: 120,
+    maxHeight: 150,
+    backgroundColor: "#00000090",
+    padding: 8,
+    borderRadius: 10,
+  },
+
+  travel: {
+    position: "absolute",
+    top: 280,
+    right: 10,
+    width: 120,
+    maxHeight: 140,
+    backgroundColor: "#00000090",
+    padding: 8,
+    borderRadius: 10,
+  },
+
+  shops: {
+    position: "absolute",
+    top: 440,
+    right: 10,
+    width: 120,
+    maxHeight: 120,
+    backgroundColor: "#00000090",
+    padding: 8,
+    borderRadius: 10,
+  },
+
+  policeBox: {
+    position: "absolute",
+    top: 120,
+    left: 10,
+    width: 120,
+    maxHeight: 120,
+    backgroundColor: "#00000090",
+    padding: 8,
+    borderRadius: 10,
+  },
+
+  airports: {
+    position: "absolute",
+    top: 260,
+    left: 10,
+    width: 120,
+    maxHeight: 120,
+    backgroundColor: "#00000090",
+    padding: 8,
+    borderRadius: 10,
+  },
+
+  modeSwitch: {
+    position: "absolute",
+    bottom: 10,
+    right: 10,
+    flexDirection: "row",
+  },
+
+  switchBtn: {
+    color: "white",
+    margin: 5,
+    fontSize: 14,
+  },
+
+  boxTitle: {
+    color: "yellow",
+    marginBottom: 5,
+    fontWeight: "bold",
+  },
+
+  listItem: {
+    color: "white",
+    fontSize: 10,
+    marginBottom: 4,
+  },
+});
 ```
-
-Then, pin the Yarn version in your project's **package.json** using the [`packageManager`](https://nodejs.org/api/packages.html#packagemanager) field. Running `yarn set version <version>` locally will update this field for you:
-
-```json package.json
-{
-  "packageManager": "yarn@4.14.1"
-}
-```
-
-After adding both of the above configurations, Corepack automatically downloads and uses the pinned Yarn version when EAS installs dependencies.
-
-### pnpm
-
-#### Local installation
-
-Requires installing Node.js. See [pnpm documentation](https://pnpm.io/installation) for installation instructions.
-
-By default, a project created with `create-expo-app` and pnpm uses [`nodeLinker`](https://pnpm.io/settings#nodelinker) with its value set to `hoisted` to install dependencies.
-
-```yaml pnpm-workspace.yaml
-nodeLinker: hoisted
-```
-
-> **info** In **SDK 54** and later, Expo supports isolated installations, and you can delete the `nodeLinker` setting if you prefer to use isolated dependencies.
-
-#### EAS installation
-
-Supported by default if the project directory contains **pnpm-lock.yaml**.
-
-### Bun
-
-See [Bun](/guides/using-bun/) guide for details on creating a new Expo project with `bun`, migration from another package manager, and usage with EAS.
